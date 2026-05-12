@@ -1,0 +1,339 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// PRODUCT DOMAIN
+// =====================
+
+model Product {
+  id            String   @id @default(cuid())
+  sku           String?
+  upc           String?
+  mpn           String?
+  title         String
+  description   String?
+  brand         String
+  category      String
+  imageUrl      String?
+  msrp          Float?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  variants      ProductVariant[]
+  retailers     RetailerListing[]
+  history       PriceHistory[]
+  sources       ManufacturerSource[]
+  insights      ProductInsight[]
+
+  @@index([sku])
+  @@index([upc])
+  @@index([brand])
+  @@fulltext([title, description])
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  color         String?
+  size          String?
+  style         String?
+  colorway      String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, color, size])
+  @@index([productId])
+}
+
+// =====================
+// RETAILER DOMAIN
+// =====================
+
+model Retailer {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  domain        String   @unique
+  logo          String?
+  trustScore    Float    @default(0)
+  category      String   // e.g., "marketplace", "brand", "discount"
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  listings      RetailerListing[]
+  sources       ManufacturerSource[]
+
+  @@index([trustScore])
+}
+
+model RetailerListing {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  retailerId    String
+  retailer      Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  url           String   @unique
+  price         Float
+  salePrice     Float?
+  discount      Float?   // percentage discount
+  inStock       Boolean  @default(true)
+
+  shipping      Float?
+  estimatedTax  Float?
+
+  lastUpdated   DateTime @default(now()) @updatedAt
+
+  createdAt     DateTime @default(now())
+
+  @@unique([productId, retailerId])
+  @@index([productId])
+  @@index([retailerId])
+  @@index([price])
+}
+
+// =====================
+// PRICING HISTORY
+// =====================
+
+model PriceHistory {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  price         Float
+  retailerId    String?  // nullable for overall market price
+
+  date          DateTime @default(now())
+
+  @@index([productId])
+  @@index([date])
+  @@index([retailerId])
+}
+
+// =====================
+// MANUFACTURER / WHOLESALE
+// =====================
+
+model ManufacturerSource {
+  id            String   @id @default(cuid())
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  retailerId    String
+  retailer      Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  sourceType    String   // "alibaba", "aliexpress", "temu", "1688", "factory"
+  sourceUrl     String?
+
+  estimatedCost Float?
+  confidenceScore Float @default(0) // 0-1
+
+  metadata      Json?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([retailerId])
+  @@index([sourceType])
+}
+
+// =====================
+// AI INSIGHTS
+// =====================
+
+model ProductInsight {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  insightType   String   // "overpriced", "fair_value", "underpriced", "wait_for_sale"
+  confidence    Float    @default(0)
+
+  message       String
+  recommendation String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([insightType])
+}
+
+// =====================
+// PRICING INTELLIGENCE
+// =====================
+
+model MarkupAnalysis {
+  id            String   @id @default(cuid())
+  productId     String   @unique
+
+  msrp          Float?
+  averageRetail Float?
+  estimatedCost Float?
+
+  estimatedMarkup Float? // percentage
+
+  isLikelyDropship Boolean @default(false)
+  dropshipConfidence Float @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// =====================
+// TRUST & SCAM DETECTION
+// =====================
+
+model TrustScore {
+  id            String   @id @default(cuid())
+  retailerId    String   @unique
+  retailer      Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  overallScore  Float    // 0-100
+
+  reviewScore   Float?
+  counterfeitRisk Float? // 0-100
+  fakeDiscountIndicators Int @default(0)
+
+  flagged       Boolean  @default(false)
+  flagReason    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// =====================
+// COUPONS & PROMOTIONS
+// =====================
+
+model Coupon {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  retailerId    String
+  retailer      Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  discount      Float    // percentage or fixed amount
+  minPurchase   Float?
+
+  verified      Boolean  @default(false)
+  expiresAt     DateTime?
+
+  lastTested    DateTime?
+  testResult    String?  // "success", "invalid", "expired"
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([retailerId])
+  @@index([verified])
+}
+
+// =====================
+// WATCHLIST & ALERTS
+// =====================
+
+model Watchlist {
+  id            String   @id @default(cuid())
+  userId        String   // TODO: integrate with auth system
+  productId     String
+
+  targetPrice   Float?
+  notifyDropPercent Float? // notify if price drops X%
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model PriceAlert {
+  id            String   @id @default(cuid())
+  watchlistId   String
+  watchlist     Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  priceDropped  Float    // the price it dropped to
+  previousPrice Float    // the previous price
+
+  sent          Boolean  @default(false)
+  sentAt        DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@index([watchlistId])
+  @@index([sent])
+}
+
+// =====================
+// SCRAPER METADATA
+// =====================
+
+model ScraperJob {
+  id            String   @id @default(cuid())
+  retailerId    String
+  retailer      Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  status        String   @default("pending") // pending, running, completed, failed
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  itemsScraped  Int      @default(0)
+  errors        Int      @default(0)
+
+  metadata      Json?
+  errorLog      String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([retailerId])
+}
+
+// =====================
+// EMBEDDINGS (VECTOR SEARCH)
+// =====================
+
+model ProductEmbedding {
+  id            String   @id @default(cuid())
+  productId     String   @unique
+
+  // pgvector extension would be needed for embedding storage
+  // embedding    vector.pgvector(1536) // OpenAI embedding dimension
+
+  embeddingModel String  @default("text-embedding-3-small")
+  embeddingSource String  @default("title") // what was embedded
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ImageEmbedding {
+  id            String   @id @default(cuid())
+  productId     String
+  imageUrl      String
+
+  // embedding     vector.pgvector(512) // Vision embedding
+
+  embeddingModel String  @default("clip")
+
+  createdAt     DateTime @default(now())
+
+  @@index([productId])
+}

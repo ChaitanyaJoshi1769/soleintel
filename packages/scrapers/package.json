@@ -1,0 +1,32 @@
+{
+  "name": "@soleintel/scrapers",
+  "version": "0.1.0",
+  "description": "SOLEINTEL Web Scraping Services",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "type-check": "tsc --noEmit",
+    "scrape:shoe-carnival": "node --loader tsx src/scrapers/shoeCarnival.ts",
+    "scrape:nike": "node --loader tsx src/scrapers/nike.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "playwright": "^1.41.1",
+    "pino": "^8.17.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "soleintel",
+  "version": "0.1.0",
+  "description": "Bloomberg Terminal for Footwear & Apparel Pricing Intelligence",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "type-check": "turbo run type-check",
+    "db:migrate": "turbo run db:migrate --filter=@soleintel/backend",
+    "db:push": "turbo run db:push --filter=@soleintel/backend",
+    "db:studio": "turbo run db:studio --filter=@soleintel/backend"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "turbo": "^1.13.3",
+    "typescript": "^5.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "^5.3.3"
+    }
+  }
+}

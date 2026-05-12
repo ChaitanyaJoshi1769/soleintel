@@ -1,0 +1,148 @@
+:root {
+  --color-bg: #0f1419;
+  --color-surface: #1a1f28;
+  --color-border: #2d3748;
+  --color-primary: #10a981;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.popup-container {
+  width: 400px;
+  max-height: 600px;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+}
+
+.product-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.product-header img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.detail-row span {
+  color: var(--color-text-secondary);
+}
+
+.detail-row strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.detail-row code {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--color-primary);
+}
+
+.discount {
+  color: var(--color-primary);
+}
+
+.loading,
+.no-product {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+  text-align: center;
+}
+
+.loading p,
+.no-product p {
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-size: 13px;
+}
+
+.no-product h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 12px rgba(16, 169, 129, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
