@@ -4,6 +4,9 @@ import { WalmartScraper } from '../scrapers/WalmartScraper';
 import { NikeScraper } from '../scrapers/NikeScraper';
 import { AdidasScraper } from '../scrapers/AdidasScraper';
 import { ZapposScraper } from '../scrapers/ZapposScraper';
+import { DSWScraper } from '../scrapers/DSWScraper';
+import { FootLockerScraper } from '../scrapers/FootLockerScraper';
+import { TargetScraper } from '../scrapers/TargetScraper';
 import { ShoeCarnivalScraper } from '../scrapers/ShoeCarnivalScraper';
 
 describe('Retailer Scrapers', () => {
@@ -16,6 +19,9 @@ describe('Retailer Scrapers', () => {
       new NikeScraper(),
       new AdidasScraper(),
       new ZapposScraper(),
+      new DSWScraper(),
+      new FootLockerScraper(),
+      new TargetScraper(),
       new ShoeCarnivalScraper(),
     ];
 
@@ -109,6 +115,51 @@ describe('Retailer Scrapers', () => {
       const scraper = new ZapposScraper();
       await scraper.initialize();
       const validUrl = 'https://zappos.com/product/123456789/color/123456';
+      expect(scraper.productUrlPattern.test(validUrl)).toBe(true);
+      await scraper.close();
+    });
+  });
+
+  describe('DSWScraper', () => {
+    it('should have correct retailer name', () => {
+      const scraper = new DSWScraper();
+      expect(scraper.retailer).toBe('DSW');
+    });
+
+    it('should match DSW product URLs', async () => {
+      const scraper = new DSWScraper();
+      await scraper.initialize();
+      const validUrl = 'https://dsw.com/en/us/product/123456789';
+      expect(scraper.productUrlPattern.test(validUrl)).toBe(true);
+      await scraper.close();
+    });
+  });
+
+  describe('FootLockerScraper', () => {
+    it('should have correct retailer name', () => {
+      const scraper = new FootLockerScraper();
+      expect(scraper.retailer).toBe('Foot Locker');
+    });
+
+    it('should match Foot Locker product URLs', async () => {
+      const scraper = new FootLockerScraper();
+      await scraper.initialize();
+      const validUrl = 'https://footlocker.com/en/product/123456';
+      expect(scraper.productUrlPattern.test(validUrl)).toBe(true);
+      await scraper.close();
+    });
+  });
+
+  describe('TargetScraper', () => {
+    it('should have correct retailer name', () => {
+      const scraper = new TargetScraper();
+      expect(scraper.retailer).toBe('Target');
+    });
+
+    it('should match Target product URLs', async () => {
+      const scraper = new TargetScraper();
+      await scraper.initialize();
+      const validUrl = 'https://target.com/p/some-product/12345';
       expect(scraper.productUrlPattern.test(validUrl)).toBe(true);
       await scraper.close();
     });

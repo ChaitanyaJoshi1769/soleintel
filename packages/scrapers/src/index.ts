@@ -8,6 +8,9 @@ export { WalmartScraper } from './scrapers/WalmartScraper';
 export { NikeScraper } from './scrapers/NikeScraper';
 export { AdidasScraper } from './scrapers/AdidasScraper';
 export { ZapposScraper } from './scrapers/ZapposScraper';
+export { DSWScraper } from './scrapers/DSWScraper';
+export { FootLockerScraper } from './scrapers/FootLockerScraper';
+export { TargetScraper } from './scrapers/TargetScraper';
 
 // Scraper factory for easy initialization
 export const SCRAPER_REGISTRY = {
@@ -17,6 +20,9 @@ export const SCRAPER_REGISTRY = {
   nike: () => new (require('./scrapers/NikeScraper').NikeScraper)(),
   adidas: () => new (require('./scrapers/AdidasScraper').AdidasScraper)(),
   zappos: () => new (require('./scrapers/ZapposScraper').ZapposScraper)(),
+  dsw: () => new (require('./scrapers/DSWScraper').DSWScraper)(),
+  'foot-locker': () => new (require('./scrapers/FootLockerScraper').FootLockerScraper)(),
+  target: () => new (require('./scrapers/TargetScraper').TargetScraper)(),
 } as const;
 
 export type ScraperKey = keyof typeof SCRAPER_REGISTRY;
