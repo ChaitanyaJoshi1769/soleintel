@@ -1,0 +1,37 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "pnpm install && pnpm build"
+  },
+  "deploy": {
+    "startCommand": "pnpm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
+  },
+  "environmentVariables": {
+    "NODE_ENV": "production",
+    "DATABASE_URL": "${{ DATABASE_URL }}",
+    "REDIS_URL": "${{ REDIS_URL }}",
+    "PORT": "3000",
+    "SENTRY_DSN": "${{ SENTRY_DSN }}",
+    "ENABLE_PRICE_TRACKING": "true",
+    "PRICE_TRACKING_INTERVAL": "360",
+    "CORS_ORIGIN": "https://soleintel.com,https://extension.soleintel.com",
+    "LOG_LEVEL": "info"
+  },
+  "plugins": [
+    {
+      "name": "postgres",
+      "config": {
+        "plan": "starter"
+      }
+    },
+    {
+      "name": "redis",
+      "config": {
+        "plan": "starter"
+      }
+    }
+  ]
+}
