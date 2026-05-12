@@ -1,0 +1,37 @@
+title: "Question about SOLEINTEL"
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking a question! Please provide as much detail as possible.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your Question"
+      description: "What would you like to know about SOLEINTEL?"
+      placeholder: "I'm trying to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Context"
+      description: "Any additional context that would help us answer?"
+      placeholder: "I'm working on..."
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: "Topic"
+      options:
+        - "Installation/Setup"
+        - "Usage"
+        - "Architecture"
+        - "Contributing"
+        - "Deployment"
+        - "Other"
+    validations:
+      required: true
