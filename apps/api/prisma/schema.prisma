@@ -365,11 +365,17 @@ model User {
   extensionToken String?
   lastLoginAt   DateTime?
 
+  // SMS Notifications
+  smsAlertsEnabled Boolean @default(false)
+  phoneNumber   UserPhoneNumber?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   watchlists    Watchlist[]
   transactions  Transaction[]
+  smsNotifications SmsNotification[]
+  smsVerifications SmsVerification[]
 
   @@index([tier])
   @@index([email])
@@ -533,4 +539,57 @@ model Transaction {
   @@index([userId])
   @@index([status])
   @@index([type])
+}
+
+// =====================
+// SMS NOTIFICATIONS
+// =====================
+
+model UserPhoneNumber {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phoneNumber   String
+  verified      Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SmsNotification {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phoneNumber   String
+  message       String
+  sid           String   // Twilio SID
+
+  status        String   @default("sent") // sent, delivered, failed
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SmsVerification {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phoneNumber   String
+  code          String
+
+  expiresAt     DateTime
+  verifiedAt    DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([code])
 }

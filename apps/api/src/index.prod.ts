@@ -22,6 +22,9 @@ import { getPriceTrackingJob } from './services/priceTrackingJob';
 import { getNotificationProcessor } from './services/notificationProcessor';
 import { getAIInsightsService } from './services/aiInsightsService';
 import { subscriptionRoutes } from './routes/subscriptions';
+import { authRoutes } from './routes/auth';
+import { smsRoutes } from './routes/sms';
+import { affiliateDashboardRoutes } from './routes/affiliateDashboard';
 
 // Initialize Sentry
 initializeSentry({
@@ -270,10 +273,23 @@ app.post('/api/products/:productId/insights/generate', async (request) => {
 });
 
 // ============================================
-// Subscription & Affiliate Endpoints (Week 4)
+// Authentication Endpoints (Phase 1)
+// ============================================
+
+await authRoutes(app);
+
+// ============================================
+// SMS Notifications Endpoints (Phase 1)
+// ============================================
+
+await smsRoutes(app);
+
+// ============================================
+// Subscription & Affiliate Endpoints (Week 4 + Phase 1)
 // ============================================
 
 await subscriptionRoutes(app);
+await affiliateDashboardRoutes(app);
 
 // ============================================
 // Admin Endpoints (Week 2)
