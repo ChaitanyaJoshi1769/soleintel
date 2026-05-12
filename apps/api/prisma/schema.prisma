@@ -250,11 +250,15 @@ model Coupon {
 
 model Watchlist {
   id            String   @id @default(cuid())
-  userId        String   // TODO: integrate with auth system
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   productId     String
 
   targetPrice   Float?
   notifyDropPercent Float? // notify if price drops X%
+
+  alerts        PriceAlert[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -336,4 +340,197 @@ model ImageEmbedding {
   createdAt     DateTime @default(now())
 
   @@index([productId])
+}
+
+// =====================
+// USER & AUTHENTICATION
+// =====================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?
+  name          String?
+
+  // Subscription
+  tier          String   @default("free") // free, pro, premium
+  subscriptionId String?
+  subscription  Subscription?
+
+  // Affiliate
+  affiliateId   String?
+  affiliate     AffiliateAccount?
+
+  // Extension access
+  extensionToken String?
+  lastLoginAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  watchlists    Watchlist[]
+  transactions  Transaction[]
+
+  @@index([tier])
+  @@index([email])
+}
+
+// =====================
+// SUBSCRIPTION MANAGEMENT
+// =====================
+
+model SubscriptionTier {
+  id            String   @id @default(cuid())
+  name          String   @unique // free, pro, premium
+  displayName   String   // "Free", "Pro", "Premium"
+
+  priceMonthly  Float    @default(0)
+  priceYearly   Float?
+
+  // Features
+  maxWatchlists Int      @default(5)
+  maxAlerts     Int      @default(10)
+  pricingHistoryDays Int @default(30)
+  affiliateRate Float    @default(0) // commission rate for affiliates
+
+  stripePriceId String?  // Stripe price ID for monthly
+  stripePriceIdYearly String?
+
+  description   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tier          String   // free, pro, premium
+  tierDetails   SubscriptionTier?
+
+  status        String   @default("active") // active, canceled, past_due
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd DateTime?
+  renewalDate   DateTime?
+
+  // Billing
+  billingEmail  String?
+  billingCycle  String   @default("monthly") // monthly, yearly
+
+  canceledAt    DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([stripeCustomerId])
+}
+
+// =====================
+// AFFILIATE PROGRAM
+// =====================
+
+model AffiliateAccount {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status        String   @default("pending") // pending, approved, suspended
+
+  // Amazon Associates
+  amazonAssociateId String?
+
+  // Paypal for payouts
+  paypalEmail   String?
+
+  totalCommissions Float @default(0)
+  availableBalance Float @default(0)
+  paidOutBalance Float @default(0)
+
+  links         AffiliateLink[]
+  commissions   AffiliateCommission[]
+
+  lastPayout    DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+}
+
+model AffiliateLink {
+  id            String   @id @default(cuid())
+  affiliateId   String
+  affiliate     AffiliateAccount @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  productId     String?
+
+  // Source attribution
+  source        String   // amazon, affiliate_link, direct
+  trackingToken String   @unique
+
+  clicks        Int      @default(0)
+  conversions   Int      @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([affiliateId])
+  @@index([trackingToken])
+}
+
+model AffiliateCommission {
+  id            String   @id @default(cuid())
+  affiliateId   String
+  affiliate     AffiliateAccount @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  amount        Float
+  rate          Float    // commission rate applied
+
+  status        String   @default("pending") // pending, approved, paid
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([affiliateId])
+  @@index([status])
+}
+
+// =====================
+// PAYMENTS & TRANSACTIONS
+// =====================
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type          String   // subscription, one_time, affiliate_payout
+  amount        Float
+  currency      String   @default("USD")
+
+  status        String   @default("pending") // pending, completed, failed
+
+  stripePaymentIntentId String?
+  stripeChargeId String?
+
+  description   String?
+  metadata      Json?
+
+  affiliateCommissions AffiliateCommission[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
 }

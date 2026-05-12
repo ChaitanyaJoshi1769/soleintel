@@ -21,6 +21,7 @@ import { compareAcrossRetailers, searchProductAcrossRetailers, getAvailableRetai
 import { getPriceTrackingJob } from './services/priceTrackingJob';
 import { getNotificationProcessor } from './services/notificationProcessor';
 import { getAIInsightsService } from './services/aiInsightsService';
+import { subscriptionRoutes } from './routes/subscriptions';
 
 // Initialize Sentry
 initializeSentry({
@@ -267,6 +268,12 @@ app.post('/api/products/:productId/insights/generate', async (request) => {
   const insights = await aiService.generateInsights(productId);
   return { success: true, insights, count: insights.length, timestamp: new Date().toISOString() };
 });
+
+// ============================================
+// Subscription & Affiliate Endpoints (Week 4)
+// ============================================
+
+await subscriptionRoutes(app);
 
 // ============================================
 // Admin Endpoints (Week 2)
