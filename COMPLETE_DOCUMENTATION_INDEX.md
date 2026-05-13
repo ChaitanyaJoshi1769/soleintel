@@ -1,8 +1,8 @@
 # SOLEINTEL: Complete Documentation Index
 
 **Status:** 🟢 COMPLETE AND DEPLOYED  
-**Total Documents:** 21 comprehensive guides  
-**Total Pages:** ~130 pages of detailed planning  
+**Total Documents:** 23 comprehensive guides  
+**Total Pages:** ~160 pages of detailed planning  
 **Timeline:** May 2026 - December 2030 (5 years)
 
 ---
@@ -160,6 +160,31 @@
     - Tool access and setup
     - Real-time monitoring checklist
 
+#### Emergency & Operations
+
+17. **[EMERGENCY_PROCEDURES_GUIDE.md](EMERGENCY_PROCEDURES_GUIDE.md)**
+    - Severity levels (🟢 green, 🟡 yellow, 🔴 red, 🚨 critical)
+    - Decision trees for emergency response
+    - Yellow, red, and critical alert procedures
+    - Specific emergency scenarios (high crash rate, API latency, blank screen, data loss)
+    - Detailed rollback procedures with exact git commands
+    - Communication templates for emergencies
+    - Post-emergency procedures and root cause analysis
+    - Emergency contact list template
+    - Pre-launch rollback testing procedure
+
+18. **[MAY_ONCALL_ESCALATION_GUIDE.md](MAY_ONCALL_ESCALATION_GUIDE.md)**
+    - On-call rotation schedule (May 13-27)
+    - On-call responsibilities (daily and night shifts)
+    - Severity-based escalation procedures
+    - Escalation decision framework (5-question checklist)
+    - Contact escalation path (Tech Lead → PM → CEO)
+    - Shift handoff procedures (end-of-shift and morning)
+    - Tools and access required for on-call
+    - Break and relief procedures
+    - On-call support and compensation
+    - Testing on-call setup before launch
+
 ---
 
 ### Phase 4: Post-Launch Growth (May 28 - July 31, 2026)
@@ -290,6 +315,12 @@
 **Team Communication & Coordination:**
 → [TEAM_COMMUNICATION_TEMPLATES.md](TEAM_COMMUNICATION_TEMPLATES.md)
 
+**Emergency Response & Rollback:**
+→ [EMERGENCY_PROCEDURES_GUIDE.md](EMERGENCY_PROCEDURES_GUIDE.md)
+
+**On-Call & Escalation:**
+→ [MAY_ONCALL_ESCALATION_GUIDE.md](MAY_ONCALL_ESCALATION_GUIDE.md)
+
 **Testing & QA:**
 → [PHASE_3_TEST_READINESS.md](PHASE_3_TEST_READINESS.md)
 
@@ -309,12 +340,13 @@
 | Category | Documents | Pages | Lines |
 |----------|-----------|-------|-------|
 | Phase 3 Launch - Core | 11 docs | ~50 pages | ~23,000 lines |
-| Phase 3 Launch - Support | 5 docs | ~40 pages | ~3,500 lines |
+| Phase 3 Launch - Support | 7 docs | ~60 pages | ~5,200 lines |
+| Phase 3 Launch - Emergency/Ops | 2 docs | ~30 pages | ~1,600 lines |
 | Phase 4 Growth | 1 doc | ~20 pages | ~1,000 lines |
 | Phase 5 Expansion | 1 doc | ~15 pages | ~800 lines |
 | Strategic Vision | 1 doc | ~10 pages | ~600 lines |
 | Historical | 1 doc | ~5 pages | ~300 lines |
-| **TOTAL** | **20 docs** | **~140 pages** | **~29,200 lines** |
+| **TOTAL** | **24 docs** | **~190 pages** | **~32,500 lines** |
 
 ---
 
@@ -433,7 +465,12 @@ Dec 31:     Year 1 complete (135,000+ users, $405K revenue)
 **For Team Coordination:**
 - [TEAM_COMMUNICATION_TEMPLATES.md](TEAM_COMMUNICATION_TEMPLATES.md) — All messaging templates
 - [MAY_20_METRICS_MONITORING_GUIDE.md](MAY_20_METRICS_MONITORING_GUIDE.md) — Real-time metrics
+- [MAY_ONCALL_ESCALATION_GUIDE.md](MAY_ONCALL_ESCALATION_GUIDE.md) — On-call schedule & escalation
 - [LAUNCH_PLAYBOOK_MASTER.md](LAUNCH_PLAYBOOK_MASTER.md) — Decision frameworks
+
+**For Emergency Response:**
+- [EMERGENCY_PROCEDURES_GUIDE.md](EMERGENCY_PROCEDURES_GUIDE.md) — How to handle emergencies and rollback
+- [MAY_ONCALL_ESCALATION_GUIDE.md](MAY_ONCALL_ESCALATION_GUIDE.md) — Escalation procedures
 
 **For Sign-Offs & Approvals:**
 - [MAY_13_READINESS_REPORT.md](MAY_13_READINESS_REPORT.md) — Final approval document
