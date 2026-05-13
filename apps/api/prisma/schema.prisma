@@ -593,3 +593,24 @@ model SmsVerification {
   @@index([userId])
   @@index([code])
 }
+
+// =====================
+// ANALYTICS & EVENTS
+// =====================
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  userId        String?
+
+  eventName     String   // user_signup, user_login, watchlist_created, etc.
+  eventType     String   // user, product, conversion, affiliate, system
+
+  properties    Json?    // Additional event data
+
+  timestamp     DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventName])
+  @@index([eventType])
+  @@index([timestamp])
+}

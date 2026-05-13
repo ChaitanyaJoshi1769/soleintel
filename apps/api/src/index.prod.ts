@@ -25,6 +25,7 @@ import { subscriptionRoutes } from './routes/subscriptions';
 import { authRoutes } from './routes/auth';
 import { smsRoutes } from './routes/sms';
 import { affiliateDashboardRoutes } from './routes/affiliateDashboard';
+import { analyticsRoutes } from './routes/analytics';
 
 // Initialize Sentry
 initializeSentry({
@@ -290,6 +291,7 @@ await smsRoutes(app);
 
 await subscriptionRoutes(app);
 await affiliateDashboardRoutes(app);
+await analyticsRoutes(app);
 
 // ============================================
 // Admin Endpoints (Week 2)
