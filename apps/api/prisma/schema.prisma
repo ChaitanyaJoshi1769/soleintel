@@ -22,7 +22,18 @@ model Product {
   title         String
   description   String?
   brand         String
-  category      String
+  category      String   // Legacy: keep for backwards compatibility
+
+  // NEW: Multi-category support
+  categoryId    String?
+  productCategory ProductCategory? @relation(fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   ProductSubcategory? @relation(fields: [subcategoryId], references: [id])
+
+  // NEW: Popularity & trending
+  popularityScore Float @default(0)
+  trendingRank  Int?
+
   imageUrl      String?
   msrp          Float?
 
@@ -34,10 +45,14 @@ model Product {
   history       PriceHistory[]
   sources       ManufacturerSource[]
   insights      ProductInsight[]
+  predictions   PricePrediction[]
 
   @@index([sku])
   @@index([upc])
   @@index([brand])
+  @@index([categoryId])
+  @@index([subcategoryId])
+  @@index([popularityScore])
   @@fulltext([title, description])
 }
 
@@ -56,6 +71,82 @@ model ProductVariant {
 
   @@unique([productId, color, size])
   @@index([productId])
+}
+
+// =====================
+// PRODUCT CATEGORIES (Phase 2)
+// =====================
+
+model ProductCategory {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  slug          String   @unique
+  description   String?
+  icon          String?  // emoji or icon name
+  color         String?  // hex color for UI
+
+  // Stats
+  productCount  Int @default(0)
+  activeTrackers Int @default(0)
+  avgPriceDrop  Float @default(0)
+
+  // Config
+  parentCategoryId String?
+  parentCategory   ProductCategory? @relation("ParentCategories", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subcategories    ProductCategory[] @relation("ParentCategories")
+
+  scrapingRules Json?  // category-specific parsing rules
+  retailerCompatibility Json? // which retailers sell this category
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  products      Product[]
+  subCategories ProductSubcategory[]
+  userPreferences UserCategoryPreference[]
+
+  @@index([slug])
+  @@index([productCount])
+}
+
+model ProductSubcategory {
+  id            String   @id @default(cuid())
+  categoryId    String
+  category      ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  name          String   // e.g., "Running Shoes", "Athletic Shoes"
+  slug          String
+  description   String?
+  icon          String?
+
+  productCount  Int @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  products      Product[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+}
+
+model UserCategoryPreference {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId    String
+  category      ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  // Notification preferences per category
+  alertsEnabled Boolean @default(true)
+  alertFrequency String @default("daily") // immediate, daily, weekly
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, categoryId])
+  @@index([userId])
 }
 
 // =====================
@@ -376,6 +467,7 @@ model User {
   transactions  Transaction[]
   smsNotifications SmsNotification[]
   smsVerifications SmsVerification[]
+  categoryPreferences UserCategoryPreference[] // NEW: Phase 2
 
   @@index([tier])
   @@index([email])
@@ -613,4 +705,53 @@ model AnalyticsEvent {
   @@index([eventName])
   @@index([eventType])
   @@index([timestamp])
+}
+
+// =====================
+// PRICE PREDICTIONS (Phase 2)
+// =====================
+
+model PricePrediction {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  predictionDate DateTime @default(now())
+
+  prediction7days Float?
+  prediction14days Float?
+  prediction30days Float?
+
+  confidence7days Float? @default(0)
+  confidence14days Float? @default(0)
+  confidence30days Float? @default(0)
+
+  recommendation String? // wait, buy, monitor
+
+  actual7daysPrice Float?
+  actual14daysPrice Float?
+  actual30daysPrice Float?
+
+  accuracy       Float?   // calculated post-prediction
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([predictionDate])
+}
+
+model ModelMetrics {
+  id            String   @id @default(cuid())
+  trainingDate  DateTime @default(now())
+
+  totalProductsTrained Int @default(0)
+  mae           Float?   // mean absolute error
+  rmse          Float?   // root mean squared error
+  accuracy      Float?   // % correct predictions
+  version       String   @default("1.0")
+
+  createdAt     DateTime @default(now())
+
+  @@index([trainingDate])
 }

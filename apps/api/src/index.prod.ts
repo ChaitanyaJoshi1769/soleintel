@@ -26,6 +26,7 @@ import { authRoutes } from './routes/auth';
 import { smsRoutes } from './routes/sms';
 import { affiliateDashboardRoutes } from './routes/affiliateDashboard';
 import { analyticsRoutes } from './routes/analytics';
+import { categoryRoutes } from './routes/categories'; // Phase 2
 
 // Initialize Sentry
 initializeSentry({
@@ -292,6 +293,7 @@ await smsRoutes(app);
 await subscriptionRoutes(app);
 await affiliateDashboardRoutes(app);
 await analyticsRoutes(app);
+await categoryRoutes(app); // Phase 2: Multi-category support
 
 // ============================================
 // Admin Endpoints (Week 2)
