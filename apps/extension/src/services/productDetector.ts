@@ -125,6 +125,158 @@ export class ProductDetector {
     return product.title ? product : null;
   }
 
+  static detectFromWalmart(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'Walmart',
+    };
+
+    const titleEl = document.querySelector('[data-testid="product-title"]');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[data-testid="product-price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[alt="Product Image"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    const walmartIdMatch = window.location.href.match(/\/ip\/(\d+)/);
+    if (walmartIdMatch) product.sku = walmartIdMatch[1];
+
+    return product.title ? product : null;
+  }
+
+  static detectFromAdidas(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'Adidas',
+    };
+
+    product.brand = 'Adidas';
+
+    const titleEl = document.querySelector('h1');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[data-testid="product-price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[class*="ProductImage"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    const styleIdMatch = window.location.href.match(/\/p\/([A-Z0-9]+)/);
+    if (styleIdMatch) product.sku = styleIdMatch[1];
+
+    return product.title ? product : null;
+  }
+
+  static detectFromZappos(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'Zappos',
+    };
+
+    const titleEl = document.querySelector('h1');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[class*="Price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[class*="ProductImage"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    return product.title ? product : null;
+  }
+
+  static detectFromDSW(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'DSW',
+    };
+
+    const titleEl = document.querySelector('h1');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[class*="Price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[alt*="product"], img[class*="ProductImage"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    return product.title ? product : null;
+  }
+
+  static detectFromFootLocker(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'Foot Locker',
+    };
+
+    const titleEl = document.querySelector('h1');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[class*="Price"]') || document.querySelector('[data-test*="price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[alt*="product"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    return product.title ? product : null;
+  }
+
+  static detectFromTarget(): DetectedProduct | null {
+    const product: DetectedProduct = {
+      title: '',
+      url: window.location.href,
+      retailer: 'Target',
+    };
+
+    const titleEl = document.querySelector('h1');
+    if (titleEl) product.title = titleEl.textContent?.trim() || '';
+
+    const priceEl = document.querySelector('[class*="Price"]') || document.querySelector('[data-test*="price"]');
+    if (priceEl) {
+      const priceText = priceEl.textContent?.match(/\d+\.?\d*/)?.[0];
+      if (priceText) product.price = parseFloat(priceText);
+    }
+
+    const imgEl = document.querySelector('img[alt*="product"], img[class*="ProductImage"]');
+    if (imgEl instanceof HTMLImageElement) {
+      product.imageUrl = imgEl.src;
+    }
+
+    return product.title ? product : null;
+  }
+
   static detectGeneric(): DetectedProduct | null {
     const product: DetectedProduct = {
       title: '',
@@ -177,6 +329,24 @@ export class ProductDetector {
     }
     if (hostname.includes('amazon')) {
       return this.detectFromAmazon();
+    }
+    if (hostname.includes('walmart')) {
+      return this.detectFromWalmart();
+    }
+    if (hostname.includes('adidas')) {
+      return this.detectFromAdidas();
+    }
+    if (hostname.includes('zappos')) {
+      return this.detectFromZappos();
+    }
+    if (hostname.includes('dsw')) {
+      return this.detectFromDSW();
+    }
+    if (hostname.includes('footlocker')) {
+      return this.detectFromFootLocker();
+    }
+    if (hostname.includes('target')) {
+      return this.detectFromTarget();
     }
 
     return this.detectGeneric();

@@ -4,6 +4,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { PrismaClient } from '@prisma/client';
 import pino from 'pino';
+import { compareAcrossRetailers, searchProductAcrossRetailers, getAvailableRetailers } from './services/retailerComparison';
 
 const logger = pino({
   transport: {
@@ -155,6 +156,68 @@ app.get('/api/search', async (request) => {
   });
 
   return { results: products };
+});
+
+// Compare product across retailers
+app.post('/api/compare', async (request) => {
+  const { productUrl, retailers } = request.body as {
+    productUrl: string;
+    retailers?: string[];
+  };
+
+  if (!productUrl) {
+    throw new Error('Product URL is required');
+  }
+
+  try {
+    const results = await compareAcrossRetailers(productUrl);
+    return {
+      success: true,
+      results,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Comparison failed');
+    throw new Error('Failed to compare product across retailers');
+  }
+});
+
+// Search across retailers
+app.get('/api/search/retailers', async (request) => {
+  const { q, retailers: retailerParam, limit } = request.query as {
+    q: string;
+    retailers?: string;
+    limit?: string;
+  };
+
+  if (!q || q.length < 2) {
+    return { results: [], message: 'Query must be at least 2 characters' };
+  }
+
+  const selectedRetailers = retailerParam ? retailerParam.split(',') : ['amazon', 'walmart', 'nike', 'adidas'];
+  const maxResults = limit ? parseInt(limit, 10) : 5;
+
+  try {
+    const results = await searchProductAcrossRetailers(q, selectedRetailers as any, maxResults);
+    return {
+      success: true,
+      query: q,
+      results,
+      count: results.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Multi-retailer search failed');
+    throw new Error('Failed to search across retailers');
+  }
+});
+
+// Get available retailers
+app.get('/api/retailers', async () => {
+  return {
+    retailers: getAvailableRetailers(),
+    count: getAvailableRetailers().length,
+  };
 });
 
 // Watchlist endpoints
