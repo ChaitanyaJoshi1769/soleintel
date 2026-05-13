@@ -469,6 +469,14 @@ model User {
   smsVerifications SmsVerification[]
   categoryPreferences UserCategoryPreference[] // NEW: Phase 2
 
+  // NEW: Phase 2 Week 3 - Social Features
+  sharedWatchlistsOwned SharedWatchlist[] @relation("SharedWatchlistsOwned")
+  communityDealsCreated CommunityDeal[] @relation("CommunityDealsCreated")
+  achievements  Achievement[] @relation("UserAchievements")
+  referralsCreated Referral[] @relation("ReferralsCreated")
+  referralsReceived ReferralHistory[] @relation("ReferralsReceived")
+  leaderboardEntries LeaderboardEntry[] @relation("LeaderboardEntries")
+
   @@index([tier])
   @@index([email])
 }
@@ -754,4 +762,135 @@ model ModelMetrics {
   createdAt     DateTime @default(now())
 
   @@index([trainingDate])
+}
+
+// =====================
+// SOCIAL FEATURES (Phase 2 Week 3)
+// =====================
+
+model SharedWatchlist {
+  id                    String   @id @default(cuid())
+  originalWatchlistId   String
+  watchlist             Watchlist @relation(fields: [originalWatchlistId], references: [id], onDelete: Cascade)
+
+  ownerUserId           String
+  owner                 User     @relation("SharedWatchlistsOwned", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  shareToken            String   @unique
+  permissions           String   @default("[\"view\"]") // JSON: ["view"], ["view", "edit"], etc.
+  expiresAt             DateTime?
+
+  viewCount             Int      @default(0)
+  lastAccessedAt        DateTime?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([ownerUserId])
+  @@index([shareToken])
+  @@index([expiresAt])
+}
+
+model CommunityDeal {
+  id                    String   @id @default(cuid())
+  authorId              String
+  author                User     @relation("CommunityDealsCreated", fields: [authorId], references: [id], onDelete: Cascade)
+
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  retailerId            String?
+  dealPrice             Float
+  originalPrice         Float
+  description           String?
+
+  upvotes               Int      @default(0)
+  downvotes             Int      @default(0)
+  commentCount          Int      @default(0)
+
+  savingsPercentage     Float
+  featured              Boolean  @default(false)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([productId])
+  @@index([createdAt])
+  @@index([featured])
+}
+
+model Achievement {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation("UserAchievements", fields: [userId], references: [id], onDelete: Cascade)
+
+  achievementType       String   // "first_watchlist", "deal_spotter", "category_expert", "price_prophet", "social_butterfly", "affiliate_king"
+  achievementName       String   // Display name
+  description           String
+  icon                  String   // emoji or icon name
+
+  unlockedAt            DateTime @default(now())
+
+  @@unique([userId, achievementType])
+  @@index([userId])
+  @@index([achievementType])
+}
+
+model Referral {
+  id                    String   @id @default(cuid())
+  referrerId            String
+  referrer              User     @relation("ReferralsCreated", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  referralCode          String   @unique
+  referredUserCount     Int      @default(0)
+  totalEarned           Float    @default(0)
+  rewardPerReferral     Float    @default(5.0)
+
+  active                Boolean  @default(true)
+
+  history               ReferralHistory[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([referralCode])
+  @@index([referrerId])
+}
+
+model ReferralHistory {
+  id                    String   @id @default(cuid())
+  referralId            String
+  referral              Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  referredUserId        String
+  referredUser          User     @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  rewardAmount          Float
+  rewardStatus          String   @default("pending") // pending, completed, refunded
+
+  createdAt             DateTime @default(now())
+
+  @@index([referralId])
+  @@index([referredUserId])
+}
+
+model LeaderboardEntry {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation("LeaderboardEntries", fields: [userId], references: [id], onDelete: Cascade)
+
+  period                String   // "weekly", "monthly", "alltime"
+  totalSavings          Float    @default(0)
+  dealsFound            Int      @default(0)
+  avgSavingsPerDeal     Float    @default(0)
+
+  rank                  Int?
+
+  updatedAt             DateTime @updatedAt
+
+  @@unique([userId, period])
+  @@index([userId])
+  @@index([period])
+  @@index([rank])
 }
