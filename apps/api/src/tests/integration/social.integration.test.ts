@@ -3,7 +3,7 @@
  * Tests the complete flow: watchlist sharing → community deals → achievements → referrals → leaderboards
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import prisma from '../../config/database';
 import { watchlistSharingService } from '../../services/watchlistSharingService';
 import { communityDealsService } from '../../services/communityDealsService';
