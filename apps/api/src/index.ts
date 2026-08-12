@@ -4,6 +4,10 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { PrismaClient } from '@prisma/client';
 import pino from 'pino';
+import { compareAcrossRetailers, searchProductAcrossRetailers, getAvailableRetailers } from './services/retailerComparison';
+import { getPriceTrackingJob } from './services/priceTrackingJob';
+import { getNotificationProcessor } from './services/notificationProcessor';
+import { getAIInsightsService } from './services/aiInsightsService';
 
 const logger = pino({
   transport: {
@@ -135,6 +139,76 @@ app.get('/api/products/:productId/insights', async (request) => {
   return insights;
 });
 
+// Generate AI insights for product
+app.post('/api/products/:productId/insights/generate', async (request) => {
+  const { productId } = request.params as { productId: string };
+
+  try {
+    const aiService = getAIInsightsService();
+    const insights = await aiService.generateInsights(productId);
+
+    return {
+      success: true,
+      insights,
+      count: insights.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Failed to generate insights');
+    throw new Error('Failed to generate insights');
+  }
+});
+
+// Get price tracking status
+app.get('/api/admin/price-tracking/status', async () => {
+  const recentJobs = await prisma.scraperJob.findMany({
+    where: { retailer: 'all' },
+    orderBy: { startedAt: 'desc' },
+    take: 5,
+  });
+
+  return {
+    jobs: recentJobs,
+    isRunning: recentJobs[0]?.status === 'in_progress',
+    lastRun: recentJobs[0]?.startedAt,
+  };
+});
+
+// Start price tracking job (admin only)
+app.post('/api/admin/price-tracking/start', async () => {
+  try {
+    const job = getPriceTrackingJob();
+    await job.start();
+
+    return {
+      success: true,
+      message: 'Price tracking job started',
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Failed to start price tracking');
+    throw new Error('Failed to start price tracking');
+  }
+});
+
+// Process unsent notifications (admin only)
+app.post('/api/admin/notifications/process', async () => {
+  try {
+    const processor = getNotificationProcessor();
+    await processor.processUnsentAlerts();
+    await processor.sendWatchlistSummaries();
+
+    return {
+      success: true,
+      message: 'Notifications processed',
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Failed to process notifications');
+    throw new Error('Failed to process notifications');
+  }
+});
+
 // Search products
 app.get('/api/search', async (request) => {
   const { q } = request.query as { q: string };
@@ -155,6 +229,68 @@ app.get('/api/search', async (request) => {
   });
 
   return { results: products };
+});
+
+// Compare product across retailers
+app.post('/api/compare', async (request) => {
+  const { productUrl, retailers } = request.body as {
+    productUrl: string;
+    retailers?: string[];
+  };
+
+  if (!productUrl) {
+    throw new Error('Product URL is required');
+  }
+
+  try {
+    const results = await compareAcrossRetailers(productUrl);
+    return {
+      success: true,
+      results,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Comparison failed');
+    throw new Error('Failed to compare product across retailers');
+  }
+});
+
+// Search across retailers
+app.get('/api/search/retailers', async (request) => {
+  const { q, retailers: retailerParam, limit } = request.query as {
+    q: string;
+    retailers?: string;
+    limit?: string;
+  };
+
+  if (!q || q.length < 2) {
+    return { results: [], message: 'Query must be at least 2 characters' };
+  }
+
+  const selectedRetailers = retailerParam ? retailerParam.split(',') : ['amazon', 'walmart', 'nike', 'adidas'];
+  const maxResults = limit ? parseInt(limit, 10) : 5;
+
+  try {
+    const results = await searchProductAcrossRetailers(q, selectedRetailers as any, maxResults);
+    return {
+      success: true,
+      query: q,
+      results,
+      count: results.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    logger.error({ err }, 'Multi-retailer search failed');
+    throw new Error('Failed to search across retailers');
+  }
+});
+
+// Get available retailers
+app.get('/api/retailers', async () => {
+  return {
+    retailers: getAvailableRetailers(),
+    count: getAvailableRetailers().length,
+  };
 });
 
 // Watchlist endpoints
@@ -193,11 +329,17 @@ app.get('/api/watchlist/:userId', async (request) => {
   return watchlist;
 });
 
+// Initialize background jobs
+let priceTrackingJob: any = null;
+
 // Graceful shutdown
 const signals = ['SIGINT', 'SIGTERM'];
 signals.forEach((signal) => {
   process.on(signal, async () => {
     logger.info(`Received ${signal}, shutting down gracefully...`);
+    if (priceTrackingJob) {
+      await priceTrackingJob.stop();
+    }
     await app.close();
     await prisma.$disconnect();
     process.exit(0);
@@ -211,6 +353,14 @@ const HOST = process.env.HOST || '0.0.0.0';
 try {
   await app.listen({ port: PORT, host: HOST });
   logger.info(`Server running at http://${HOST}:${PORT}`);
+
+  // Start background jobs
+  if (process.env.ENABLE_PRICE_TRACKING !== 'false') {
+    priceTrackingJob = getPriceTrackingJob({
+      intervalMinutes: parseInt(process.env.PRICE_TRACKING_INTERVAL || '360', 10),
+    });
+    await priceTrackingJob.start();
+  }
 } catch (err) {
   logger.error(err);
   process.exit(1);
